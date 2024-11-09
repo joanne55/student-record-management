@@ -1,0 +1,54 @@
+# Node modules
+node_modules/
+
+# npm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+
+# Build and output directories
+dist/
+build/
+
+# Dependency directory for certain package managers (e.g., pnpm)
+.pnpm/
+.pnp/
+
+# IDE or editor settings
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Coverage output
+coverage/
+
+# Log files
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Optional directory for logs if used in production
+logs/
+
+# .next for Next.js (if used)
+.next/
+
+# SASS or other preprocessed CSS files
+.sass-cache/
+
+# TypeScript definition files (if using TypeScript)
+*.tsbuildinfo
+
+# Optional: if using Docker, ignore Docker-related files
+.docker/
+
+# Optional: if using Docker Compose, ignore docker-compose.override.yml (specific to your environment)
+docker-compose.override.yml
