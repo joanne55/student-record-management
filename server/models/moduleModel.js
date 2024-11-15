@@ -1,42 +1,33 @@
-const db = require('../db/database')
+const { Sequelize, DataTypes } = require('sequelize');
 
+// Initialize Sequelize
+const sequelize = new Sequelize('', '', '', {
+    host: '../db/database.db',
+    dialect: 'sqlite' 
+});
 
-// Retrieve all modules
-exports.getAllModules = (id, callback) => {
-    db.get('SELECT * FROM module', [], (err, row) => {
-        callback(err, row);
-    });
-};
+// Define the Module model
+const Module = sequelize.define('Module', {
+    moduleID: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true },
+    moduleName: { type: DataTypes.STRING, allowNull: false },
+    description: { type: DataTypes.STRING },
+    credits: { type: DataTypes.INTEGER, allowNull: false },
+    lecturerID: { type: DataTypes.INTEGER, allowNull: false },
+    courseID: { type: DataTypes.INTEGER, allowNull: false },
+}, { 
+    tableName: 'module',
+    timestamps: false, // Disable createdAt and updatedAt columns
+});
 
-// Retrieve module by ID
-exports.getModuleById = (id, callback) => {
-    db.all('SELECT * FROM module WHERE studentID = ?', [id], (err, rows) => {
-        callback(err, rows);
-    });
-};
+// Sync the model with the database
+(async () => {
+    try {
+        await sequelize.authenticate();
+        console.log('Connection established successfully.');
+        await sequelize.sync(); // This will sync the model to the database.
+    } catch (error) {
+        console.error('Unable to connect to the database:', error);
+    }
+})();
 
-// Add a new module
-exports.addModule = (module, callback) => {
-    const {moduleID, moduleName, description, credits, lecturerID, courseID} = module;
-    const sql = 'INSERT INTO module (moduleID, moduleName, description, credits, lecturerID, courseID) VALUES (?, ?, ?, ?, ?, ?)';
-    db.run(sql, [moduleID, moduleName, description, credits, lecturerID, courseID], function (err) {
-        callback(err, { id: this.lastID }); // Return ID of the inserted student 
-    });   
-};
-
-// Update a module
-exports.updateModule = (id, module, callback) => {
-    const {moduleID, moduleName, description, credits, lecturerID, courseID} = module;
-    const sql = 'UPDATE module SET moduleID= ?, moduleName= ?, description= ?, credits= ?, lecturerID= ?, courseID= ?';
-    db.run(sql, [moduleID, moduleName, description, credits, lecturerID, courseID], function (err) {
-        callback(err, { changes: this.changes }); // Return number of rows updated
-    });
-};
-
-// Delete a module
-exports.deleteModule = (id, callback) => {
-    const sql = 'DELETE FROM module WHERE moduleID = ?';
-    db.run(sql, [id], function (err) {
-        callback(err, { changes: this.changes }); // Return number of rows deleted
-    });
-};
+module.exports = Module;

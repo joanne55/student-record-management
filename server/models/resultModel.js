@@ -1,42 +1,31 @@
-const db = require('../db/database')
+const { Sequelize, DataTypes } = require('sequelize');
+
+// Initialize Sequelize
+const sequelize = new Sequelize('', '', '', {
+    host: '../db/database.db',
+    dialect: 'sqlite' 
+});
+
+// Define the Result model
+const Result = sequelize.define('Result', {
+    studentID: { type: DataTypes.INTEGER, allowNull: false },
+    moduleID: { type: DataTypes.INTEGER, allowNull: false },
+    grade: { type: DataTypes.STRING, allowNull: false }
+}, { 
+    tableName: 'result',
+    timestamps: false, // No createdAt or updatedAt columns
+});
+
+// Sync the model with the database
+(async () => {
+    try {
+        await sequelize.authenticate();
+        console.log('Connection established successfully.');
+        await sequelize.sync(); // This will sync the model to the database.
+    } catch (error) {
+        console.error('Unable to connect to the database:', error);
+    }
+})();
 
 
-// Retrieve all results
-exports.getAllResult = (id, callback) => {
-    db.get('SELECT * FROM result', [], (err, row) => {
-        callback(err, row);
-    });
-};
-
-// Retrieve result by ID
-exports.getResultById = (id, callback) => {
-    db.all('SELECT * FROM result WHERE studentID = ?', [id], (err, rows) => {
-        callback(err, rows);
-    });
-};
-
-// Add a new result
-exports.addResult = (result, callback) => {
-    const {studentID, moduleID, grade} = result;
-    const sql = 'INSERT INTO result (studentID, moduleID, grade) VALUES (?, ?, ?)';
-    db.run(sql, [studentID, moduleID, grade], function (err) {
-        callback(err, { id: this.lastID }); // Return ID of the inserted student 
-    });   
-};
-
-// Update a result
-exports.updateResult = (id, result, callback) => {
-    const {studentID, moduleID, grade} = result;
-    const sql = 'UPDATE result SET studentID= ?, moduleID= ?, grade= ?';
-    db.run(sql, [studentID, moduleID, grade], function (err) {
-        callback(err, { changes: this.changes }); // Return number of rows updated
-    });
-};
-
-// Delete a result
-exports.deleteResult = (id, callback) => {
-    const sql = 'DELETE FROM result WHERE studentID = ?';
-    db.run(sql, [id], function (err) {
-        callback(err, { changes: this.changes }); // Return number of rows deleted
-    });
-};
+module.exports = Result;

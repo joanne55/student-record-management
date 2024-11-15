@@ -1,42 +1,30 @@
-const db = require('../db/database')
+const { Sequelize, DataTypes } = require('sequelize');
 
+// Initialize Sequelize
+const sequelize = new Sequelize('', '', '', {
+    host: '../db/database.db',
+    dialect: 'sqlite' 
+});
 
-// Retrieve all course
-exports.getAllcourse = (id, callback) => {
-    db.get('SELECT * FROM course', [], (err, row) => {
-        callback(err, row);
-    });
-};
+// Define the Course model
+const Course = sequelize.define('Course', {
+    courseID: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true },
+    courseName: { type: DataTypes.STRING, allowNull: false },
+    description: { type: DataTypes.STRING },
+}, { 
+    tableName: 'course',
+    timestamps: false, // Disable createdAt and updatedAt
+});
 
-// Retrieve course by ID
-exports.getcourseById = (id, callback) => {
-    db.all('SELECT * FROM course WHERE courseID = ?', [id], (err, rows) => {
-        callback(err, rows);
-    });
-};
+// Sync the model with the database
+(async () => {
+    try {
+        await sequelize.authenticate();
+        console.log('Connection established successfully.');
+        await sequelize.sync(); // This will sync the model to the database.
+    } catch (error) {
+        console.error('Unable to connect to the database:', error);
+    }
+})();
 
-// Add a new course
-exports.addcourse = (course, callback) => {
-    const {courseID, courseName, description} = course;
-    const sql = 'INSERT INTO course (courseID, courseName, description) VALUES (?, ?, ?)';
-    db.run(sql, [courseID, courseName, description], function (err) {
-        callback(err, { id: this.lastID }); // Return ID of the inserted student 
-    });   
-};
-
-// Update a course
-exports.updatecourse = (id, course, callback) => {
-    const {courseID, courseName, description} = course;
-    const sql = 'UPDATE course SET courseID= ?, courseName= ?, description= ?';
-    db.run(sql, [courseID, courseName, description], function (err) {
-        callback(err, { changes: this.changes }); // Return number of rows updated
-    });
-};
-
-// Delete a course
-exports.deletecourse = (id, callback) => {
-    const sql = 'DELETE FROM course WHERE courseID = ?';
-    db.run(sql, [id], function (err) {
-        callback(err, { changes: this.changes }); // Return number of rows deleted
-    });
-};
+module.exports = Course;

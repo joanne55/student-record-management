@@ -1,42 +1,32 @@
-const db = require('../db/database')
+const { Sequelize, DataTypes } = require('sequelize');
 
+// Initialize Sequelize
+const sequelize = new Sequelize('', '', '', {
+    host: '../db/database.db',
+    dialect: 'sqlite' 
+});
 
-// Retrieve all student
-exports.getAllStudent = (id, callback) => {
-    db.get('SELECT * FROM student', [], (err, row) => {
-        callback(err, row);
-    });
-};
+// Define the Student model
+const Student = sequelize.define('Student', {
+    Fname: { type: DataTypes.STRING, allowNull: false },
+    Lname: { type: DataTypes.STRING, allowNull: false },
+    address: { type: DataTypes.STRING },
+    contact: { type: DataTypes.STRING },
+    email: { type: DataTypes.STRING },
+    DOB: { type: DataTypes.DATE },
+    enrollDate: { type: DataTypes.DATE },
+    courseID: { type: DataTypes.INTEGER }
+}, { tableName: 'student', timestamps: false });
 
-// Retrieve student by ID
-exports.getStudentById = (id, callback) => {
-    db.all('SELECT * FROM items WHERE studentID = ?', [id], (err, rows) => {
-        callback(err, rows);
-    });
-};
+// Sync the model with the database
+(async () => {
+    try {
+        await sequelize.authenticate();
+        console.log('Connection established successfully.');
+        await sequelize.sync(); // This will sync the model to the database.
+    } catch (error) {
+        console.error('Unable to connect to the database:', error);
+    }
+})();
 
-// Add a new student
-exports.addStudent = (student, callback) => {
-    const {Fname, Lname, address, contact, email, DOB, enrollDate, courseID} = student;
-    const sql = 'INSERT INTO student (Fname, Lname, address, contact, email, DOB, enrollDate, courseID) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-    db.run(sql, [Fname, Lname, address, contact, email, DOB, enrollDate, courseID], function (err) {
-        callback(err, { id: this.lastID }); // Return ID of the inserted student 
-    });   
-};
-
-// Update a student
-exports.updateStudent = (id, student, callback) => {
-    const { Fname, Lname, address, contact, email, DOB, enrollDate, courseID } = student;
-    const sql = 'UPDATE student SET Fname = ?, Lname = ?, address = ?, contact = ?, email = ?, DOB = ?, enrollDate = ?, courseID = ? WHERE id = ?';
-    db.run(sql, [Fname, Lname, address, contact, email, DOB, enrollDate, courseID, id], function (err) {
-        callback(err, { changes: this.changes }); // Return number of rows updated
-    });
-};
-
-// Delete a student
-exports.deleteStudent = (id, callback) => {
-    const sql = 'DELETE FROM student WHERE studentID = ?';
-    db.run(sql, [id], function (err) {
-        callback(err, { changes: this.changes }); // Return number of rows deleted
-    });
-};
+module.exports = Student;
