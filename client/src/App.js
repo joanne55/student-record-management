@@ -1,25 +1,60 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import LoginScreen from './screens/LoginScreen';
+import AdminHome from './screens/AdminHome';
+import StudentHome from './screens/StudentHome';
 
-function App() {
+const App = () => {
+  const [userRole, setUserRole] = useState(null);
+
+  const handleLogin = (role) => {
+    setUserRole(role);
+  };
+
+  const handleLogout = () => {
+      setUserRole(null);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+    <Router>
+        <Routes>
+            {/* Login Route */}
+            <Route
+                path="/"
+                element={
+                    userRole ? (
+                        <Navigate replace to={`/${userRole}Home`} />
+                    ) : (
+                        <LoginScreen onLogin={handleLogin} />
+                    )
+                }
+            />
+            {/* Admin Home Route */}
+            <Route
+                path="/AdminHome"
+                element={
+                    userRole === 'admin' ? (
+                        <AdminHome onLogout={handleLogout} />
+                    ) : (
+                        <Navigate replace to="/" />
+                    )
+                }
+            />
+            {/* Student Home Route */}
+            <Route
+                path="/StudentHome"
+                element={
+                    userRole === 'student' ? (
+                        <StudentHome onLogout={handleLogout} />
+                    ) : (
+                        <Navigate replace to="/" />
+                    )
+                }
+            />
+        </Routes>
+    </Router>
+);
+
+};
 
 export default App;
