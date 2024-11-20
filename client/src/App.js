@@ -6,13 +6,16 @@ import StudentHome from './screens/StudentHome';
 
 const App = () => {
   const [userRole, setUserRole] = useState(null);
+  const [userID, setUserID] = useState(null);
 
-  const handleLogin = (role) => {
+  const handleLogin = (role, id) => {
     setUserRole(role);
+    setUserID(id);
   };
 
   const handleLogout = () => {
       setUserRole(null);
+      setUserID(null);
   };
 
   return (
@@ -45,7 +48,7 @@ const App = () => {
                 path="/StudentHome"
                 element={
                     userRole === 'student' ? (
-                        <StudentHome onLogout={handleLogout} />
+                        <StudentHome onLogout={handleLogout} userID={userID} />
                     ) : (
                         <Navigate replace to="/" />
                     )

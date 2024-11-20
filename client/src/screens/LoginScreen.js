@@ -11,11 +11,11 @@ const LoginScreen = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = () => { // need to change to real data
     if (username === 'admin' && password === 'admin123') {
         onLogin('admin');
-    } else if (username === 'student' && password === 'student123') {
-        onLogin('student');
+    } else if (username === 's101' && password === 'password') {
+        onLogin('student', username);
     } else {
         alert('Invalid credentials');
     }

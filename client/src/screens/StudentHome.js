@@ -3,11 +3,11 @@ import ViewModules from './ViewModules';
 import ViewResults from './ViewResults';
 import ViewStudentInfo from './ViewStudentInfo';
 
-const StudentHome = ({ onLogout }) => {
+const StudentHome = ({ userID, onLogout }) => {
   const [activeScreen, setActiveScreen] = useState('Home'); // Tracks the current screen
 
   // Components for each screen
-  const HomeScreen = () => <h1>Welcome to Student Management System</h1>;
+  const HomeScreen = () => <h1>Hi {userID}, Welcome to Student Management System</h1>;
 
   // Function to render the active screen
   const renderScreen = () => {
