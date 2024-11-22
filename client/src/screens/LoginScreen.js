@@ -13,7 +13,7 @@ const LoginScreen = ({ onLogin }) => {
 
   const handleLogin = () => { // need to change to real data
     if (username === 'admin' && password === 'admin123') {
-        onLogin('admin');
+        onLogin('admin', username);
     } else if (username === 's101' && password === 'password') {
         onLogin('student', username);
     } else {

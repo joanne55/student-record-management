@@ -49,12 +49,12 @@ const StudentInfo = ({ studentId }) => {
             <Text style={styles.cellValue}>98987777</Text>
             </View>
             <View style={styles.row}>
-            <Text style={styles.cellLabel}>Date of Birth</Text>
-            <Text style={styles.cellValue}>1999-11-11</Text>
-            </View>
-            <View style={styles.row}>
             <Text style={styles.cellLabel}>Email</Text>
             <Text style={styles.cellValue}>john@u.nus.edu</Text>
+            </View>
+            <View style={styles.row}>
+            <Text style={styles.cellLabel}>Date of Birth</Text>
+            <Text style={styles.cellValue}>1999-11-11</Text>
             </View>
         </View>
         </View>

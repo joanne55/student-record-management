@@ -28,7 +28,7 @@ const App = () => {
                     userRole ? (
                         <Navigate replace to={`/${userRole}Home`} />
                     ) : (
-                        <LoginScreen onLogin={handleLogin} />
+                        <LoginScreen onLogin={handleLogin} userID={userID} />
                     )
                 }
             />
@@ -37,7 +37,7 @@ const App = () => {
                 path="/AdminHome"
                 element={
                     userRole === 'admin' ? (
-                        <AdminHome onLogout={handleLogout} />
+                        <AdminHome onLogout={handleLogout}  userID={userID} />
                     ) : (
                         <Navigate replace to="/" />
                     )
