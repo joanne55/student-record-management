@@ -1,46 +1,94 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { useNavigate } from 'react-router-dom';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
 
 const LoginScreen = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
+  const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const navigate = useNavigate();
 
-  const handleLogin = () => { // need to change to real data
-    if (username === 'admin' && password === 'admin123') {
-        onLogin('admin', username);
-    } else if (username === 's101' && password === 'password') {
-        onLogin('student', username);
-    } else {
-        alert('Invalid credentials');
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          password,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const token = data.token.token;
+        const role = data.token.role;
+
+        sessionStorage.setItem('authToken', token);
+        console.log('role:', role);
+
+        onLogin(role, userId);
+
+        setSuccess('Login successful! Redirecting...');
+        setError('');
+
+        // Redirect dynamically based on user role
+        setTimeout(() => {
+          if (role === 'admin') {
+            navigate('/AdminHome');
+          } else if (role === 'student') {
+            navigate('/StudentHome');
+          } else {
+            setError('Invalid user role');
+          }
+        }, 2000);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Login failed.');
+        setSuccess('');
+      }
+    } catch (err) {
+      setError('An error occurred while logging in.');
+      setSuccess('');
     }
-};
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
+      <form onSubmit={handleLogin} style={styles.form}>
+        <div>
+          <TextInput
+            style={styles.input}
+            type="text"
+            placeholder="User ID"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <TextInput
+            style={styles.input}
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            secureTextEntry={true}
+          />
+        </div>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Login</Text>
+        </TouchableOpacity>
+      </form>
+      {error && <Text style={{ color: 'red' }}>{error}</Text>}
+      {success && <Text style={{ color: 'green' }}>{success}</Text>}
     </View>
   );
 };
@@ -79,6 +127,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  form: {
+    width: '100%',
+    marginBottom: 20,
+  }
 });
 
 export default LoginScreen;
+
