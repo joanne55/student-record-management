@@ -1,65 +1,75 @@
-const studentService = require('../services/studentService'); 
+const studentService = require('../services/studentService');
 
-// Get all students
-exports.getAllStudents = async (req, res) => {
-    try {
-        const students = await studentService.getAllStudents();
-        res.status(200).json(students);
-    } catch (err) {
-        res.status(500).json({ message: 'Error retrieving students', error: err.message });
-    }
+// Admin: View all students
+const getAllStudents = async (req, res) => {
+  try {
+    const students = await studentService.getAllStudents();
+    res.json({
+      message: 'Student list retrieved successfully',
+      data: students,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error retrieving students',
+      error: error.message,
+    });
+  }
 };
 
-// Get student by ID
-exports.getStudentById = async (req, res) => {
-    const { id } = req.params; // Get student ID from request parameters
-    try {
-        const student = await studentService.getStudentById(id);
-        if (!student) {
-            return res.status(404).json({ message: 'Student not found' });
-        }
-        res.status(200).json(student);
-    } catch (err) {
-        res.status(500).json({ message: 'Error retrieving student', error: err.message });
-    }
+// Admin: Add a new student
+const addStudent = async (req, res) => {
+  try {
+    const { id, username, password, fname, lname, address, contact, dob, email } = req.body;
+    const result = await studentService.addStudent({ id, username, password, fname, lname, address, contact, dob, email });
+    res.status(201).json({
+      message: 'Student and user added successfully',
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error adding student and user',
+      error: error.message,
+    });
+  }
 };
 
-// Add new student
-exports.addStudent = async (req, res) => {
-    const newStudent = req.body; // Get new student data from request body
-    try {
-        const student = await studentService.addStudent(newStudent);
-        res.status(201).json({ message: 'Student added successfully', student });
-    } catch (err) {
-        res.status(500).json({ message: 'Error adding student', error: err.message });
-    }
+// Student: Update personal details
+const updateStudentDetails = async (req, res) => {
+  try {
+    const studentId = req.user.userId; // Extract from JWT payload
+    const { Saddress, Scontact, Semail } = req.body;
+    const updatedStudent = await studentService.updateStudentDetails(studentId, { Saddress, Scontact, Semail });
+    res.json({
+      message: 'Student details updated successfully',
+      data: updatedStudent,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error updating student details',
+      error: error.message,
+    });
+  }
 };
 
-// Update a student
-exports.updateStudent = async (req, res) => {
-    const { id } = req.params; // Get student ID from request parameters
-    const updatedStudent = req.body; // Get updated student data from the request body
-    try {
-        const rowsUpdated = await studentService.updateStudent(id, updatedStudent);
-        if (rowsUpdated === 0) {
-            return res.status(404).json({ message: 'Student not found or no changes made' });
-        }
-        res.status(200).json({ message: 'Student updated successfully' });
-    } catch (err) {
-        res.status(500).json({ message: 'Error updating student', error: err.message });
-    }
+// Admin: Delete a student
+const deleteStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await studentService.deleteStudent(id);
+    res.json({
+      message: 'Student and associated user deleted successfully',
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error deleting student',
+      error: error.message,
+    });
+  }
 };
 
-// Delete a student
-exports.deleteStudent = async (req, res) => {
-    const { id } = req.params; // Get student ID from request parameters
-    try {
-        const rowsDeleted = await studentService.deleteStudent(id);
-        if (rowsDeleted === 0) {
-            return res.status(404).json({ message: 'Student not found' });
-        }
-        res.status(200).json({ message: 'Student deleted successfully' });
-    } catch (err) {
-        res.status(500).json({ message: 'Error deleting student', error: err.message });
-    }
+module.exports = {
+  getAllStudents,
+  addStudent,
+  updateStudentDetails,
+  deleteStudent,
 };

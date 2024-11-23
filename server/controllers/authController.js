@@ -1,35 +1,40 @@
-// server/controllers/authController.js
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-const db = require('../db/dbConfig');
-require('dotenv').config();
-const secret = process.env.JWT_SECRET;
+const authService = require('../services/authService');
 
-async function login(req, res) {
-  const { username, password } = req.body;
+const register = async (req, res) => {
+  const { userId, username, password, role } = req.body;
 
-  // Verify user credentials
-  db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
-    if (err || !user) return res.status(400).json({ message: 'User not found' });
-   
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) return res.status(400).json({ message: 'Invalid credentials' });
+  try {
+    const newUser = await authService.registerUser(userId, username, password, role);
+    res.status(201).json({
+      message: 'User registered successfully!',
+      userId: newUser.userId,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error registering user',
+      error: error.message,
+    });
+  }
+};
 
-    // Create and return JWT
-    const token = jwt.sign({ id: user.id, role: user.role }, secret, { expiresIn: '1h' });
-    res.json({ token });
-  });
-}
+const login = async (req, res) => {
+  const { userId, password } = req.body;
 
-async function register(req, res) {
-  const { username, password, role } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
+  try {
+    const token = await authService.loginUser(userId, password);
+    res.json({
+      message: 'Login successful',
+      token,
+    });
+  } catch (error) {
+    res.status(error.status || 500).json({
+      message: error.message || 'Error logging in',
+      error: error.message,
+    });
+  }
+};
 
-  // Insert new user
-  db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', [username, hashedPassword, role], function(err) {
-    if (err) return res.status(500).json({ message: 'Error registering user', error: err.message });
-    res.status(201).json({ message: 'User registered' });
-  });
-}
-
-module.exports = { login, register };
+module.exports = {
+  register,
+  login,
+};
