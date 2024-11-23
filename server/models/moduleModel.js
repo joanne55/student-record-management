@@ -1,33 +1,12 @@
 const { Sequelize, DataTypes } = require('sequelize');
+const sequelize = require('../db/dbConfig');
 
-// Initialize Sequelize
-const sequelize = new Sequelize('', '', '', {
-    host: '../db/database.db',
-    dialect: 'sqlite' 
-});
-
-// Define the Module model
+// Define Module model
 const Module = sequelize.define('Module', {
-    moduleID: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true },
-    moduleName: { type: DataTypes.STRING, allowNull: false },
-    description: { type: DataTypes.STRING },
-    credits: { type: DataTypes.INTEGER, allowNull: false },
-    lecturerID: { type: DataTypes.INTEGER, allowNull: false },
-    courseID: { type: DataTypes.INTEGER, allowNull: false },
-}, { 
-    tableName: 'module',
-    timestamps: false, // Disable createdAt and updatedAt columns
-});
-
-// Sync the model with the database
-(async () => {
-    try {
-        await sequelize.authenticate();
-        console.log('Connection established successfully.');
-        await sequelize.sync(); // This will sync the model to the database.
-    } catch (error) {
-        console.error('Unable to connect to the database:', error);
-    }
-})();
+    moduleId: { type: DataTypes.STRING(255), primaryKey: true, allowNull: false, unique: true },
+    moduleName: { type: DataTypes.STRING(255), allowNull: false },
+    description: { type: DataTypes.STRING(255) },
+    credit: { type: DataTypes.INTEGER, allowNull: false }
+}, { freezeTableName: true });
 
 module.exports = Module;

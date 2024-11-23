@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const db = require('../db/dbConfig');
 
 // Get all records with role-based restrictions
 exports.getAll = (req, res) => {

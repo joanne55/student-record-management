@@ -1,34 +1,41 @@
 const { Sequelize, DataTypes } = require('sequelize');
+const sequelize = require('../db/dbConfig');
 
-// Initialize Sequelize
-const sequelize = new Sequelize('', '', '', {
-    host: '../db/database.db',
-    dialect: 'sqlite' 
-});
-
-// Define the Lecturer model
+// Define Lecturer model
 const Lecturer = sequelize.define('Lecturer', {
-    lecturerID: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true },
-    Fname: { type: DataTypes.STRING, allowNull: false },
-    Lname: { type: DataTypes.STRING, allowNull: false },
-    address: { type: DataTypes.STRING },
-    contact: { type: DataTypes.STRING },
-    email: { type: DataTypes.STRING },
-    department: { type: DataTypes.STRING },
-}, { 
-    tableName: 'lecturer',
-    timestamps: false, // No createdAt or updatedAt columns
-});
+    Lid: {
+        type: DataTypes.STRING(255),
+        primaryKey: true,
+        allowNull: false,
+        references: { model: 'User', key: 'userId' },
+        // validate: {
+        //     notEmpty: { msg: "Lecturer ID cannot be empty" },
+        //     async userExists(value) {
+        //         const user = await sequelize.models.User.findByPk(value);
+        //         if (!user) {
+        //             throw new Error("Lecturer ID must correspond to an existing user ID");
+        //         }
+        //     }
+        // }
+    },
+    Lfname: { type: DataTypes.STRING(255), allowNull: false },
+    Llname: { type: DataTypes.STRING(255), allowNull: false },
+    Laddress: { type: DataTypes.STRING(255), allowNull: false },
+    Lcontact: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+            notEmpty: { msg: "Contact number cannot be empty" },
+            isInt: { msg: "Contact number must be a valid integer" },
+            len: {
+                args: [8, 8],
+                msg: "Contact number must be exactly 8 digits-Singapore Contact number"
+            },
+        },
 
-// Sync the model with the database
-(async () => {
-    try {
-        await sequelize.authenticate();
-        console.log('Connection established successfully.');
-        await sequelize.sync(); // This will sync the model to the database.
-    } catch (error) {
-        console.error('Unable to connect to the database:', error);
-    }
-})();
+    },
+    Lemail: { type: DataTypes.STRING(255), allowNull: false, unique: true },
+    Ldepartment: { type: DataTypes.STRING(255), allowNull: false }
+}, { freezeTableName: true });
 
 module.exports = Lecturer;

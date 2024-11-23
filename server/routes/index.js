@@ -9,10 +9,10 @@ router.post('/login', authController.login);
 router.post('/register', authController.register);
 
 // Protected routes
-router.use(auth);
+router.use(auth);       // verify client JWT
 
 // Admin only routes
-router.post('/students', checkRole(['admin']), dataController.create);
+router.post('/students', checkRole(['admin']), dataController.create); 
 router.post('/courses', checkRole(['admin']), dataController.create);
 router.post('/lecturers', checkRole(['admin']), dataController.create);
 router.delete('/:type/:id', checkRole(['admin']), dataController.delete);

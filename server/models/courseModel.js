@@ -1,30 +1,14 @@
+// courseModel.js will contain the schema and model for the course table in the database.
 const { Sequelize, DataTypes } = require('sequelize');
+const sequelize = require('../db/dbConfig');
 
-// Initialize Sequelize
-const sequelize = new Sequelize('', '', '', {
-    host: '../db/database.db',
-    dialect: 'sqlite' 
-});
-
-// Define the Course model
 const Course = sequelize.define('Course', {
-    courseID: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true },
-    courseName: { type: DataTypes.STRING, allowNull: false },
-    description: { type: DataTypes.STRING },
-}, { 
-    tableName: 'course',
-    timestamps: false, // Disable createdAt and updatedAt
+    courseId: { type: DataTypes.STRING(255), primaryKey: true, allowNull: false, unique: true },
+    courseName: { type: DataTypes.STRING(255), allowNull: false },
+    description: { type: DataTypes.STRING(255), allowNull: true }
+}, {
+    freezeTableName: true,
+    timestamps: false, // Disable createdAt and updatedAt 
 });
-
-// Sync the model with the database
-(async () => {
-    try {
-        await sequelize.authenticate();
-        console.log('Connection established successfully.');
-        await sequelize.sync(); // This will sync the model to the database.
-    } catch (error) {
-        console.error('Unable to connect to the database:', error);
-    }
-})();
 
 module.exports = Course;

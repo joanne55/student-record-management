@@ -1,32 +1,40 @@
 const { Sequelize, DataTypes } = require('sequelize');
+const sequelize = require('../db/dbConfig');
 
-// Initialize Sequelize
-const sequelize = new Sequelize('', '', '', {
-    host: '../db/database.db',
-    dialect: 'sqlite' 
-});
-
-// Define the Student model
+// Define Student model
 const Student = sequelize.define('Student', {
-    Fname: { type: DataTypes.STRING, allowNull: false },
-    Lname: { type: DataTypes.STRING, allowNull: false },
-    address: { type: DataTypes.STRING },
-    contact: { type: DataTypes.STRING },
-    email: { type: DataTypes.STRING },
-    DOB: { type: DataTypes.DATE },
-    enrollDate: { type: DataTypes.DATE },
-    courseID: { type: DataTypes.INTEGER }
-}, { tableName: 'student', timestamps: false });
-
-// Sync the model with the database
-(async () => {
-    try {
-        await sequelize.authenticate();
-        console.log('Connection established successfully.');
-        await sequelize.sync(); // This will sync the model to the database.
-    } catch (error) {
-        console.error('Unable to connect to the database:', error);
-    }
-})();
+    Sid: {
+        type: DataTypes.STRING(255),
+        primaryKey: true,
+        allowNull: false,
+        references: { model: 'User', key: 'userId' },
+        // validate: {
+        //     notEmpty: { msg: "Student ID cannot be empty" },
+        //     async userExists(value) {
+        //         const user = await sequelize.models.User.findByPk(value);
+        //         if (!user) {
+        //             throw new Error("Student ID must correspond to an existing user ID");
+        //         }
+        //     }
+        // }
+    },
+    Sfname: { type: DataTypes.STRING(255), allowNull: false },
+    Slname: { type: DataTypes.STRING(255), allowNull: false },
+    Saddress: { type: DataTypes.STRING(255), allowNull: false },
+    Scontact: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+            notEmpty: { msg: "Contact number cannot be empty" },
+            isInt: { msg: "Contact number must be a valid integer" },
+            len: {
+                args: [8, 8],
+                msg: "Contact number must be exactly 8 digits-Singapore Contact number"
+            },
+        },
+    },
+    Sdob: { type: DataTypes.DATEONLY, allowNull: false },
+    Semail: { type: DataTypes.STRING(255), allowNull: false, unique: true }
+}, { freezeTableName: true });
 
 module.exports = Student;

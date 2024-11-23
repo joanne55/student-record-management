@@ -2,10 +2,14 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const app = express();
-const db = new sqlite3.Database('database.db');
+const cors = require('cors');
 const routes = require('./routes/index'); 
 
+// Connect to db and insert test data
+require('./db/dataInit');
+
 // Middleware
+app.use(cors())
 app.use(express.json());
 
 // Use main router for all API routes
