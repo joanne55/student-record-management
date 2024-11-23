@@ -1,43 +1,61 @@
+// services/lecturerService.js
 const Lecturer = require('../models/lecturerModel');
+const User = require('../models/userModel')
+const bcrypt = require('bcryptjs');
 
-exports.getAllLecturers = async () => {
-    try {
-        return await Lecturer.findAll();
-    } catch (err) {
-        throw new Error('Error fetching lecturers: ' + err.message);
-    }
+const getAllLecturers = async () => {
+  return await Lecturer.findAll();
 };
 
-exports.getLecturerById = async (id) => {
-    try {
-        return await Lecturer.findOne({ where: { lecturerID: id } });
-    } catch (err) {
-        throw new Error('Error fetching lecturer by ID: ' + err.message);
-    }
+const addLecturerAndUser = async (id, username, password, fname, lname, address, contact, email, department) => {
+  // Check if username already exists
+  const existingUser = await User.findOne({ where: { username } });
+  if (existingUser) {
+    throw new Error('Username already exists');
+  }
+
+  // Step 1: Create the User record for the lecturer
+  const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
+  const newUser = await User.create({
+    userId: id,         // Use the same ID for both User and Lecturer
+    username: username,
+    password: hashedPassword,
+    role: 'lecturer'     // Set role to 'lecturer'
+  });
+
+  // Step 2: Create the Lecturer record using the same ID
+  const newLecturer = await Lecturer.create({
+    Lid: newUser.userId, // Link the Lecturer's ID to the User's ID (userId)
+    Lfname: fname,
+    Llname: lname,
+    Laddress: address,
+    Lcontact: contact,
+    Lemail: email,
+    Ldepartment: department
+  });
+
+  return {
+    user: newUser,    // Newly created user
+    lecturer: newLecturer  // Newly created lecturer
+  };
 };
 
-exports.addLecturer = async (lecturer) => {
-    try {
-        return await Lecturer.create(lecturer);
-    } catch (err) {
-        throw new Error('Error adding lecturer: ' + err.message);
-    }
+const deleteLecturer = async (id) => {
+  const lecturer = await Lecturer.findByPk(id);
+
+  if (!lecturer) {
+    throw new Error('Lecturer not found');
+  }
+
+  // Delete the lecturer record
+  await lecturer.destroy();
+
+  // Optionally, delete the associated user record if the lecturer is deleted
+  await models.User.destroy({ where: { userId: lecturer.Lid } });
 };
 
-exports.updateLecturer = async (id, updatedLecturer) => {
-    try {
-        const [updatedRows] = await Lecturer.update(updatedLecturer, { where: { lecturerID: id } });
-        return updatedRows; // Number of rows updated
-    } catch (err) {
-        throw new Error('Error updating lecturer: ' + err.message);
-    }
-};
-
-exports.deleteLecturer = async (id) => {
-    try {
-        const deletedRows = await Lecturer.destroy({ where: { lecturerID: id } });
-        return deletedRows; // Number of rows deleted
-    } catch (err) {
-        throw new Error('Error deleting lecturer: ' + err.message);
-    }
+module.exports = {
+  getAllLecturers,
+  addLecturerAndUser,
+  deleteLecturer
 };

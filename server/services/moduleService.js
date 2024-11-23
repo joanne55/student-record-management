@@ -1,43 +1,60 @@
+// services/moduleService.js
 const Module = require('../models/moduleModel');
+const Enrollment = require('../models/enrollmentModel');
+const Contains = require('../models/containsModel');
+const Teach = require('../models/teachModel');
 
-exports.getAllModules = async () => {
-    try {
-        return await Module.findAll();
-    } catch (err) {
-        throw new Error('Error fetching modules: ' + err.message);
-    }
+const getAllModules = async () => {
+  return await Module.findAll();
 };
 
-exports.getModuleById = async (id) => {
-    try {
-        return await Module.findOne({ where: { moduleID: id } });
-    } catch (err) {
-        throw new Error('Error fetching module by ID: ' + err.message);
-    }
+const createModule = async (id, name, description, credits) => {
+  const newModule = await Module.create({
+    moduleId: id,
+    moduleName: name,
+    description: description,
+    credit: credits
+  });
+  return newModule;
 };
 
-exports.addModule = async (module) => {
-    try {
-        return await Module.create(module);
-    } catch (err) {
-        throw new Error('Error adding module: ' + err.message);
-    }
+const deleteModule = async (id) => {
+  const module = await Module.findByPk(id);
+  if (!module) {
+    throw new Error('Module not found');
+  }
+  await module.destroy();
 };
 
-exports.updateModule = async (id, updatedModule) => {
-    try {
-        const [updatedRows] = await Module.update(updatedModule, { where: { moduleID: id } });
-        return updatedRows; // Number of rows updated
-    } catch (err) {
-        throw new Error('Error updating module: ' + err.message);
-    }
+const getModulesForStudent = async (studentId) => {
+  const enrolledCourses = await Enrollment.findAll({
+    where: { Sid: studentId },
+    include: [{ model: models.Course, attributes: ['courseId'] }]
+  });
+
+  if (enrolledCourses.length === 0) {
+    throw new Error('Student is not enrolled in any courses');
+  }
+
+  const courseIds = enrolledCourses.map(e => e.Course.courseId);
+
+  return await Contains.findAll({
+    where: { courseId: courseIds },
+    include: [{ model: models.Module, attributes: ['moduleId', 'moduleName', 'description', 'credit'] }]
+  });
 };
 
-exports.deleteModule = async (id) => {
-    try {
-        const deletedRows = await Module.destroy({ where: { moduleID: id } });
-        return deletedRows; // Number of rows deleted
-    } catch (err) {
-        throw new Error('Error deleting module: ' + err.message);
-    }
+const getModulesForLecturer = async (lecturerId) => {
+  return await Teach.findAll({
+    where: { Lid: lecturerId },
+    include: [{ model: models.Module, attributes: ['moduleId', 'moduleName', 'description', 'credit'] }]
+  });
+};
+
+module.exports = {
+  getAllModules,
+  createModule,
+  deleteModule,
+  getModulesForStudent,
+  getModulesForLecturer
 };

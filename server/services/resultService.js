@@ -1,43 +1,41 @@
+// services/gradesService.js
 const Result = require('../models/resultModel');
+const Module = require('../models/moduleModel');
+const Teach = require('../models/teachModel');
 
-exports.getAllResults = async () => {
-    try {
-        return await Result.findAll();
-    } catch (err) {
-        throw new Error('Error fetching results: ' + err.message);
-    }
+const getGradesForStudent = async (studentId) => {
+  return await Result.findAll({
+    where: { Sid: studentId },
+    include: {
+      model: Module,
+      attributes: ['moduleId', 'moduleName'], // Include module details
+    },
+  });
 };
 
-exports.getResultById = async (id) => {
-    try {
-        return await Result.findAll({ where: { studentID: id } });
-    } catch (err) {
-        throw new Error('Error fetching result by ID: ' + err.message);
-    }
+const addOrUpdateGrade = async (lecturerId, studentId, moduleId, grade) => {
+  // Check if the lecturer teaches the module
+  const teach = await Teach.findOne({ where: { Lid: lecturerId, moduleId } });
+
+  if (!teach) {
+    throw new Error('You are not authorized to assign grades for this module.');
+  }
+
+  // Check if the student is enrolled in the module
+  const result = await Result.findOne({ where: { Sid: studentId, moduleId } });
+
+  if (!result) {
+    throw new Error('Student is not enrolled in this module.');
+  }
+
+  // Update the grade if it exists, otherwise create a new entry
+  result.grade = grade;
+  await result.save();
+
+  return result;
 };
 
-exports.addResult = async (result) => {
-    try {
-        return await Result.create(result); // Sequelize automatically returns the created object
-    } catch (err) {
-        throw new Error('Error adding result: ' + err.message);
-    }
-};
-
-exports.updateResult = async (id, result) => {
-    try {
-        const [updatedRows] = await Result.update(result, { where: { id } });
-        return updatedRows; // Number of rows updated
-    } catch (err) {
-        throw new Error('Error updating result: ' + err.message);
-    }
-};
-
-exports.deleteResult = async (id) => {
-    try {
-        const deletedRows = await Result.destroy({ where: { studentID: id } });
-        return deletedRows; // Number of rows deleted
-    } catch (err) {
-        throw new Error('Error deleting result: ' + err.message);
-    }
+module.exports = {
+  getGradesForStudent,
+  addOrUpdateGrade,
 };
