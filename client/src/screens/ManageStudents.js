@@ -21,7 +21,7 @@ const ManageStudents = () => {
   
     // Handle add student
     const handleSubmit = async () => {
-      const apiUrl = 'http://localhost:3000/api/students'; // Replace with your API endpoint
+      const apiUrl = 'http://localhost:3000/api/student'; // Replace with your API endpoint
   
       try {
         const response = await fetch(apiUrl, {

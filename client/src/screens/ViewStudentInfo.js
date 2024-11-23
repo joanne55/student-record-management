@@ -10,7 +10,7 @@ const StudentInfo = ({ studentId }) => {
     useEffect(() => {
         const fetchStudent = async () => {
         try {
-            const response = await fetch(`http://localhost:3000/students/${studentId}`); // API URL
+            const response = await fetch(`http://localhost:3000/student/${studentId}`); // API URL
             if (!response.ok) {
                 throw new Error('Student not found');
             }

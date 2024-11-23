@@ -1,5 +1,6 @@
 const authService = require('../services/authService');
 
+
 const register = async (req, res) => {
   const { userId, username, password, role } = req.body;
 
@@ -24,7 +25,7 @@ const login = async (req, res) => {
     const token = await authService.loginUser(userId, password);
     res.json({
       message: 'Login successful',
-      token,
+      token
     });
   } catch (error) {
     res.status(error.status || 500).json({
