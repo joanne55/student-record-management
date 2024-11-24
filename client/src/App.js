@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import LoginScreen from './screens/LoginScreen';
 import AdminHome from './screens/AdminHome';
 import StudentHome from './screens/StudentHome';
+import LecturerHome from './screens/LecturerHome';
 
 const App = () => {
   const [userRole, setUserRole] = useState(null);
@@ -49,6 +50,17 @@ const App = () => {
                 element={
                     userRole === 'student' ? (
                         <StudentHome onLogout={handleLogout} userID={userID} />
+                    ) : (
+                        <Navigate replace to="/" />
+                    )
+                }
+            />
+            {/* Lecturer Home Route */}
+            <Route
+                path="/LecturerHome"
+                element={
+                    userRole === 'lecturer' ? (
+                        <LecturerHome onLogout={handleLogout} userID={userID} />
                     ) : (
                         <Navigate replace to="/" />
                     )
