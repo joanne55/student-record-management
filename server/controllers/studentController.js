@@ -20,6 +20,8 @@ const getAllStudents = async (req, res) => {
 const addStudent = async (req, res) => {
   try {
     const { id, username, password, fname, lname, address, contact, dob, email } = req.body;
+    // Log the incoming data for debugging
+    console.log('Received data:', req.body);
     const result = await studentService.addStudent({ id, username, password, fname, lname, address, contact, dob, email });
     res.status(201).json({
       message: 'Student and user added successfully',
