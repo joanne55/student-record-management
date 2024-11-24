@@ -1,15 +1,43 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import axios from 'axios';
 
 const ModuleInfo = () => {
-    const modulesData = [
-        { moduleID: 'TIC2001', moduleName: 'Basic Computing', description: 'This module introduces fundamental computing concepts, including hardware, software, operating systems, and basic programming.', credits: 4 }, 
-        { moduleID: 'TIC1002', moduleName: 'Data structure', description: 'description for TIC1002', credits: 4 }, 
-        { moduleID: 'MAC1002', moduleName: 'Machanical Engineering', description: 'description for MAC1002', credits: 4 }, 
-        { moduleID: 'CEG1001', moduleName: 'Chemistry for Engineers', description: 'description for CEG1001', credits: 4 }, 
-    ];
+    // const modulesData = [
+    //     { moduleID: 'TIC2001', moduleName: 'Basic Computing', description: 'This module introduces fundamental computing concepts, including hardware, software, operating systems, and basic programming.', credits: 4 }, 
+    //     { moduleID: 'TIC1002', moduleName: 'Data structure', description: 'description for TIC1002', credits: 4 }, 
+    //     { moduleID: 'MAC1002', moduleName: 'Machanical Engineering', description: 'description for MAC1002', credits: 4 }, 
+    //     { moduleID: 'CEG1001', moduleName: 'Chemistry for Engineers', description: 'description for CEG1001', credits: 4 }, 
+    // ];
 
-    
+    const [modules, setModules] = useState([]);
+
+    // Fetch all modules from the backend
+    const fetchModules = async () => {
+      const token = sessionStorage.getItem('authToken');
+      if (!token) {
+          Alert.alert('Error', 'User not authenticated');
+          return;
+      }
+
+      try {
+          const response = await axios.get('http://localhost:3001/api/module/student', {
+              headers: {
+                  Authorization: `Bearer ${token}`,
+              },
+          });
+          console.log('API Response:', response.data.data); // Debugging
+          setModules(response.data.data || []); // Set the modules list from the API response
+      } catch (error) {
+          console.error('Error fetching modules:', error);
+          Alert.alert('Error', 'Failed to load modules');
+      }
+  };
+
+  // Fetch modules when the component mounts
+  useEffect(() => {
+      fetchModules();
+  }, []);
   
     return (
       <View style={styles.container}>
@@ -24,17 +52,17 @@ const ModuleInfo = () => {
             </View>
   
             {/* Data Rows */}
-            {modulesData.map((modules, index) => (
-              <View
-                key={modules.moduleID}
-                style={[styles.row, index % 2 === 0 ? styles.evenRow : styles.oddRow]}
-              >
-                <Text style={styles.cell}>{modules.moduleID}</Text>
-                <Text style={styles.cell}>{modules.moduleName}</Text>
-                <Text style={styles.cell}>{modules.description}</Text>
-                <Text style={styles.cell}>{modules.credits}</Text>
-              </View>
-            ))}
+            {modules.map((module, index) => (
+                        <View
+                            key={module.moduleId}
+                            style={[styles.row, index % 2 === 0 ? styles.evenRow : styles.oddRow]}
+                        >
+                            <Text style={styles.cell}>{module.Module?.moduleId || 'N/A'}</Text>
+                            <Text style={styles.cell}>{module.Module?.moduleName || 'N/A'}</Text>
+                            <Text style={styles.cell}>{module.Module?.description || 'N/A'}</Text>
+                            <Text style={styles.cell}>{module.Module?.credit || 'N/A'}</Text>
+                        </View>
+                    ))}
           </View>
       </View>
     );
