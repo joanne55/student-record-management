@@ -1,3 +1,5 @@
+A university management system for Admin stff, Students and Lecturers to view and update relevant information to them. 
+
 # Project Setup
 
 ## Requirements
@@ -13,7 +15,7 @@ node app.js       # start the server application
 
 ### Run client application 
 ```bash
-cd ../client
+cd ./client
 npm install       # install client-side libraries
 npm start         # start the client application
 ```
