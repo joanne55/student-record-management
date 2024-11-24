@@ -1,259 +1,245 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, Button, Alert, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import axios from 'axios';
 
 const ManageStudents = () => {
   const [students, setStudents] = useState([]);
   const [formData, setFormData] = useState({
-    id: '',
+    studentID: '',
+    username: '',
+    password: '',  // Added password field
     fname: '',
     lname: '',
     address: '',
     contact: '',
-    email: '',
     dob: '',
-    password: '',
-    username: ''
+    email: '',
   });
-  const [loading, setLoading] = useState(false); // Loading state
 
-  // Fetch the list of students from the API
+  // Handle input changes to update form data
+  const handleInputChange = (key, value) => {
+    setFormData({ ...formData, [key]: value });
+  };
+
+  // Fetch all students from the backend
   const fetchStudents = async () => {
     const token = sessionStorage.getItem('authToken');
     if (!token) {
-      Alert.alert('Error', 'You must be logged in to access this page.');
+      Alert.alert('Error', 'User not authenticated');
       return;
     }
 
     try {
-      const response = await fetch('http://localhost:3001/api/student', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      const response = await axios.get('http://localhost:3001/api/student', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (Array.isArray(data.data)) {
-          setStudents(data.data);
-        } else {
-          Alert.alert('Error', 'Fetched data is not an array.');
-        }
-      } else {
-        const errorData = await response.json();
-        Alert.alert('Error', errorData.message || 'Failed to fetch students');
-      }
+      setStudents(response.data.data || []); // Set the students list from the API response
     } catch (error) {
-      Alert.alert('Error', 'Something went wrong while fetching student data');
+      console.error('Error fetching students:', error);
+      if (error.response) {
+        Alert.alert('Error', `Failed to load students. Status code: ${error.response.status}`);
+      } else if (error.request) {
+        Alert.alert('Error', 'No response from server');
+      } else {
+        Alert.alert('Error', `Error: ${error.message}`);
+      }
     }
   };
 
+  // Fetch students when the component mounts
   useEffect(() => {
     fetchStudents();
   }, []);
 
-  // Function to generate username automatically
-  const generateUsername = (fname, lname) => {
-    return `${fname.toLowerCase()}${lname.toLowerCase()}`;
-  };
-
-  const handleInputChange = (key, value) => {
-    setFormData(prevData => {
-      const newData = { ...prevData, [key]: value };
-
-      // Automatically generate username when fname or lname is changed
-      if (key === 'fname' || key === 'lname') {
-        newData.username = generateUsername(newData.fname, newData.lname);
-      }
-
-      return newData;
-    });
-  };
-
+  // Handle form submission for adding or updating a student
   const handleSubmit = async () => {
     const token = sessionStorage.getItem('authToken');
     if (!token) {
-      Alert.alert('Error', 'You must be logged in to add a student');
+      Alert.alert('Error', 'Session expired. Please log in again.');
       return;
     }
 
-    // Validate required fields
-    if (!formData.id || !formData.username || !formData.password || !formData.fname || !formData.lname ||
-        !formData.address || !formData.contact || !formData.dob || !formData.email) {
-      Alert.alert('Error', 'Please fill in all fields');
+    // Validation to ensure all fields are filled
+    if (!formData.studentID || !formData.username || !formData.password || !formData.fname || !formData.lname || !formData.email) {
+      Alert.alert('Error', 'All fields are required.');
       return;
     }
 
-    // Add student data (Including id from the form)
-    setLoading(true);  // Start loading indicator
     try {
-      const response = await fetch('http://localhost:3001/api/student', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({
-          id: formData.id,       // Include id from the input
-          username: formData.username,
-          password: formData.password,
-          fname: formData.fname,
-          lname: formData.lname,
-          address: formData.address,
-          contact: formData.contact,
-          dob: formData.dob,
-          email: formData.email
-        }),
+      const postData = {
+        id: formData.studentID,
+        username: formData.username,
+        password: formData.password, // Include the password in the post data
+        fname: formData.fname,
+        lname: formData.lname,
+        address: formData.address,
+        contact: formData.contact,
+        dob: formData.dob,
+        email: formData.email,
+      };
+
+      const response = await axios.post('http://localhost:3001/api/student', postData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      if (response.ok) {
+      if (response.status === 201) {
         Alert.alert('Success', 'Student added successfully!');
         setFormData({
-          id: '', username: '', password: '', fname: '', lname: '', address: '', contact: '', dob: '', email: ''
+          studentID: '',
+          username: '',
+          password: '', // Reset password field
+          fname: '',
+          lname: '',
+          address: '',
+          contact: '',
+          dob: '',
+          email: '',
         });
-        fetchStudents(); // Re-fetch students after adding
+        fetchStudents();
       } else {
-        const errorData = await response.json();
-        Alert.alert('Error', errorData.message || 'Failed to add student');
+        Alert.alert('Error', 'Failed to add/update student.');
       }
     } catch (error) {
-      Alert.alert('Error', 'Something went wrong while adding student');
-    } finally {
-      setLoading(false);  // Stop loading indicator
+      console.error('Detailed Error:', error.response ? error.response.data : error.message);
+      Alert.alert('Error', 'Failed to add/update student. Check logs for details.');
     }
   };
 
-  const handleDelete = async (id) => {
+  // Handle deleting a student
+  const handleDelete = async () => {
     const token = sessionStorage.getItem('authToken');
     if (!token) {
-      Alert.alert('Error', 'You must be logged in to delete a student');
+      Alert.alert('Error', 'Session expired. Please log in again.');
       return;
     }
 
-    Alert.alert(
-      'Delete Student',
-      'Are you sure you want to delete this student?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'OK',
-          onPress: async () => {
-            try {
-              const response = await fetch(`http://localhost:3001/api/student/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` },
-              });
+    if (!formData.studentID) {
+      Alert.alert('Error', 'Student ID is required for deletion.');
+      return;
+    }
 
-              if (response.ok) {
-                setStudents(students.filter(student => student.id !== id));
-                Alert.alert('Success', 'Student deleted successfully');
-              } else {
-                const errorData = await response.json();
-                Alert.alert('Error', errorData.message || 'Failed to delete student');
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Something went wrong while deleting student');
-            }
-          },
+    try {
+      const response = await axios.delete(`http://localhost:3001/api/student/${formData.studentID}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      ],
-      { cancelable: false }
-    );
+      });
+
+      if (response.status === 200) {
+        Alert.alert('Success', 'Student deleted successfully!');
+        setFormData({
+          studentID: '',
+          username: '',
+          password: '', // Reset password field
+          fname: '',
+          lname: '',
+          address: '',
+          contact: '',
+          dob: '',
+          email: '',
+        });
+        fetchStudents();
+      } else {
+        Alert.alert('Error', 'Failed to delete student.');
+      }
+    } catch (error) {
+      console.error('Detailed Error:', error.response ? error.response.data : error.message);
+      Alert.alert('Error', 'Failed to delete student. Check logs for details.');
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Manage Students</Text>
-
-      {/* Add Student Form */}
+      <Text style={styles.title}>Manage Student</Text>
       <View style={styles.editTable}>
         <TextInput
           style={styles.input}
           placeholder="Student ID"
-          value={formData.id}  // Changed Sid to id for consistency
-          onChangeText={(value) => handleInputChange('id', value)}  // Changed Sid to id
+          value={formData.studentID}
+          onChangeText={(value) => handleInputChange('studentID', value)}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          value={formData.username}
+          onChangeText={(value) => handleInputChange('username', value)}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          value={formData.password}
+          onChangeText={(value) => handleInputChange('password', value)}
+          secureTextEntry={true} // This will mask the password input
         />
         <TextInput
           style={styles.input}
           placeholder="First Name"
-          value={formData.fname}  // Changed Sfname to fname
-          onChangeText={(value) => handleInputChange('fname', value)}  // Changed Sfname to fname
+          value={formData.fname}
+          onChangeText={(value) => handleInputChange('fname', value)}
         />
         <TextInput
           style={styles.input}
           placeholder="Last Name"
-          value={formData.lname}  // Changed Slname to lname
-          onChangeText={(value) => handleInputChange('lname', value)}  // Changed Slname to lname
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Username (auto-generated)"
-          value={formData.username}
-          editable={false}  // Make the username input read-only
+          value={formData.lname}
+          onChangeText={(value) => handleInputChange('lname', value)}
         />
         <TextInput
           style={styles.input}
           placeholder="Address"
-          value={formData.address}  // Changed Saddress to address
-          onChangeText={(value) => handleInputChange('address', value)}  // Changed Saddress to address
+          value={formData.address}
+          onChangeText={(value) => handleInputChange('address', value)}
         />
         <TextInput
           style={styles.input}
           placeholder="Contact"
-          value={formData.contact}  // Changed Scontact to contact
-          onChangeText={(value) => handleInputChange('contact', value)}  // Changed Scontact to contact
-          keyboardType="numeric"
+          value={formData.contact}
+          onChangeText={(value) => handleInputChange('contact', value)}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Date of Birth"
+          value={formData.dob}
+          onChangeText={(value) => handleInputChange('dob', value)}
         />
         <TextInput
           style={styles.input}
           placeholder="Email"
-          value={formData.email}  // Changed Semail to email
-          onChangeText={(value) => handleInputChange('email', value)}  // Changed Semail to email
+          value={formData.email}
+          onChangeText={(value) => handleInputChange('email', value)}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Date of Birth (YYYY-MM-DD)"
-          value={formData.dob}  // Changed Sdob to dob
-          onChangeText={(value) => handleInputChange('dob', value)}  // Changed Sdob to dob
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Provide a temp Password for student login account"
-          value={formData.password}
-          onChangeText={(value) => handleInputChange('password', value)}
-          secureTextEntry
-        />
-        <Button title="Add Student" onPress={handleSubmit} disabled={loading} />
+        <Button title="Add/Update Student" onPress={handleSubmit} />
+        <Button title="Delete Student" onPress={handleDelete} color="red" />
       </View>
 
-      {/* Students Table */}
       <Text style={styles.title}>Students List</Text>
-      <ScrollView style={styles.table}>
-        {/* Table Header */}
-        <View style={styles.tableRow}>
-          <Text style={styles.tableHeader}>ID</Text>
-          <Text style={styles.tableHeader}>Full Name</Text>
-          <Text style={styles.tableHeader}>Contact</Text>
-          <Text style={styles.tableHeader}>Email</Text>
-          <Text style={styles.tableHeader}>DOB</Text>
-          <Text style={styles.tableHeader}>Actions</Text>
+      <View style={styles.listTable}>
+        <View style={[styles.row, styles.headerRow]}>
+          <Text style={[styles.cell, styles.headerCell]}>StudentID</Text>
+          <Text style={[styles.cell, styles.headerCell]}>Full Name</Text>
+          <Text style={[styles.cell, styles.headerCell]}>Address</Text>
+          <Text style={[styles.cell, styles.headerCell]}>Contact</Text>
+          <Text style={[styles.cell, styles.headerCell]}>Email</Text>
         </View>
 
-        {/* Table Body */}
-        {students.length > 0 ? (
-          students.map((student) => (
-            <View key={student.Sid} style={styles.tableRow}>  {/* Changed Sid to id */}
-              <Text style={[styles.tableCell, { textAlign: 'center' }]}>{student.Sid}</Text>  {/* Changed Sid to id */}
-              <Text style={[styles.tableCell, { textAlign: 'left' }]}>{student.Sfname} {student.Slname}</Text>  {/* Changed Sfname, Slname to fname, lname */}
-              <Text style={[styles.tableCell, { textAlign: 'center' }]}>{student.Scontact}</Text>  {/* Changed Scontact to contact */}
-              <Text style={[styles.tableCell, { textAlign: 'left' }]}>{student.Semail}</Text>  {/* Changed Semail to email */}
-              <Text style={[styles.tableCell, { textAlign: 'center' }]}>{student.Sdob}</Text>  {/* Changed Sdob to dob */}
-              <View style={styles.tableCell}>
-                <TouchableOpacity onPress={() => handleDelete(student.Sid)}>  {/* Changed Sid to id */}
-                  <Text style={styles.buttonText}>Delete</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.noDataText}>No students found</Text>
-        )}
-      </ScrollView>
+        {students.map((student, index) => (
+          <View
+            key={student.id}
+            style={[styles.row, index % 2 === 0 ? styles.evenRow : styles.oddRow]}
+          >
+            <Text style={[styles.cell]}>{student.Sid}</Text>
+            <Text style={[styles.cell]}>
+              {student.Sfname} {student.Slname}
+            </Text>
+            <Text style={[styles.cell]}>{student.Saddress}</Text>
+            <Text style={[styles.cell]}>{student.Scontact}</Text>
+            <Text style={[styles.cell]}>{student.Semail}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 };
@@ -261,53 +247,64 @@ const ManageStudents = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 10,
     backgroundColor: '#fff',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
-    textAlign: 'center',
+    color: '#000',
+    textAlign: 'left',
+  },
+  input: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 15,
+    fontSize: 16,
+    color: '#000',
   },
   editTable: {
     marginBottom: 20,
   },
-  input: {
-    height: 40,
-    borderColor: '#ccc',
+  listTable: {
+    width: '100%',
     borderWidth: 1,
-    marginBottom: 10,
-    paddingLeft: 10,
-    fontSize: 16,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    overflow: 'hidden',
   },
-  table: {
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  tableRow: {
+  row: {
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
-    paddingVertical: 10,
   },
-  tableHeader: {
+  headerRow: {
+    backgroundColor: '#333',
+    flexDirection: 'row',
+  },
+  evenRow: {
+    backgroundColor: '#f9f9f9',
+  },
+  oddRow: {
+    backgroundColor: '#fff',
+  },
+  cell: {
     flex: 1,
+    paddingVertical: 15,
+    paddingLeft: 10,
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#000',
+  },
+  headerCell: {
+    color: '#fff',
     fontWeight: 'bold',
     textAlign: 'center',
-  },
-  tableCell: {
-    flex: 1,
-    textAlign: 'center',
-  },
-  buttonText: {
-    color: '#f00',
-    textAlign: 'center',
-  },
-  noDataText: {
-    textAlign: 'center',
-    fontStyle: 'italic',
-    color: '#888',
   },
 });
 

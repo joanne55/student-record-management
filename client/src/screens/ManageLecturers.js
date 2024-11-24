@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 
 const ManageLecturers = () => {
@@ -36,7 +36,16 @@ const ManageLecturers = () => {
       setLecturers(response.data.data || []); // Set the lecturers list from the API response
     } catch (error) {
       console.error('Error fetching lecturers:', error);
-      Alert.alert('Error', 'Failed to load lecturers');
+      if (error.response) {
+        // Request made and server responded with a status code outside the range 2xx
+        Alert.alert('Error', `Failed to load lecturers. Status code: ${error.response.status}`);
+      } else if (error.request) {
+        // Request made but no response was received
+        Alert.alert('Error', 'No response from server');
+      } else {
+        // Something else went wrong
+        Alert.alert('Error', `Error: ${error.message}`);
+      }
     }
   };
 
@@ -49,31 +58,41 @@ const ManageLecturers = () => {
   const handleSubmit = async () => {
     const token = sessionStorage.getItem('authToken');
     if (!token) {
-      Alert.alert('Error', 'User not authenticated');
+      Alert.alert('Error', 'Session expired. Please log in again.');
       return;
     }
-
+  
+    // Validation to ensure all fields are filled
+    if (!formData.lecturerID || !formData.fname || !formData.lname || !formData.email) {
+      Alert.alert('Error', 'All fields are required.');
+      return;
+    }
+  
     try {
-      // Prepare the data in the format expected by the backend
+      console.log('Sending data to backend:', formData); // Log the form data
+  
       const postData = {
-        Lid: formData.lecturerID,    // assuming your backend expects Lid for lecturer ID
-        Lfname: formData.fname,      // mapping first name
-        Llname: formData.lname,      // mapping last name
-        Laddress: formData.address,
-        Lcontact: formData.contact,
-        Lemail: formData.email,
-        Ldepartment: formData.department,
+        id: formData.lecturerID,
+        username: `${formData.fname.toLowerCase()}${formData.lecturerID}`,
+        password: 'password123',
+        fname: formData.fname,
+        lname: formData.lname,
+        address: formData.address,
+        contact: formData.contact,
+        email: formData.email,
+        department: formData.department,
       };
-
+  
       const response = await axios.post('http://localhost:3001/api/lecturer', postData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      if (response.status === 200) {
+  
+      console.log('Response from backend:', response);
+  
+      if (response.status === 201) {
         Alert.alert('Success', 'Lecturer added successfully!');
-        // Reset form data
         setFormData({
           lecturerID: '',
           fname: '',
@@ -83,42 +102,16 @@ const ManageLecturers = () => {
           email: '',
           department: '',
         });
-        // Re-fetch lecturers
         fetchLecturers();
+      } else {
+        Alert.alert('Error', 'Failed to add/update lecturer.');
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to add/update lecturer');
+      console.error('Detailed Error:', error.response ? error.response.data : error.message);
+      Alert.alert('Error', 'Failed to add/update lecturer. Check logs for details.');
     }
   };
-
-  // Handle lecturer deletion
-  const handleDelete = async (id) => {
-    const token = sessionStorage.getItem('authToken');
-    console.log('Deleting lecturer with ID:', id);
-    if (!token) {
-      Alert.alert('Error', 'User not authenticated');
-      return;
-    }
-
-    const confirmDelete = window.confirm('Are you sure you want to delete this lecturer?');
-    if (!confirmDelete) return;
-
-    try {
-      const response = await axios.delete(`http://localhost:3001/api/lecturer/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 200) {
-        setLecturers((prevLecturers) => prevLecturers.filter((lecturer) => lecturer.Lid !== id));
-        Alert.alert('Success', 'Lecturer deleted successfully');
-      }
-    } catch (error) {
-      console.error('Error deleting lecturer:', error.response?.data || error.message);
-      Alert.alert('Error', error.response?.data?.error || 'Failed to delete lecturer');
-    }
-  };
+  
 
   return (
     <View style={styles.container}>
@@ -178,13 +171,11 @@ const ManageLecturers = () => {
           <Text style={[styles.cell, styles.headerCell, styles.contactColumn]}>Contact</Text>
           <Text style={[styles.cell, styles.headerCell, styles.emailColumn]}>Email</Text>
           <Text style={[styles.cell, styles.headerCell, styles.departmentColumn]}>Department</Text>
-          <Text style={[styles.cell, styles.headerCell]}></Text>
-          <Text style={[styles.cell, styles.headerCell]}></Text>
         </View>
 
         {lecturers.map((lecturer, index) => (
           <View
-            key={lecturer.Lid}
+            key={lecturer.id}
             style={[styles.row, index % 2 === 0 ? styles.evenRow : styles.oddRow]}
           >
             <Text style={[styles.cell, styles.lecturerIdColumn]}>{lecturer.Lid}</Text>
@@ -195,12 +186,6 @@ const ManageLecturers = () => {
             <Text style={[styles.cell, styles.contactColumn]}>{lecturer.Lcontact}</Text>
             <Text style={[styles.cell, styles.emailColumn]}>{lecturer.Lemail}</Text>
             <Text style={[styles.cell, styles.departmentColumn]}>{lecturer.Ldepartment}</Text>
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => handleDelete(lecturer.Lid)}
-            >
-              <Text style={styles.deleteButtonText}>DELETE</Text>
-            </TouchableOpacity>
           </View>
         ))}
       </View>
@@ -212,7 +197,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    padding: 10,
+    paddingTop: 10,
     backgroundColor: '#fff',
   },
   title: {
@@ -220,6 +205,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
     color: '#333',
+    textAlign: 'left',
   },
   input: {
     width: '100%',
@@ -247,6 +233,7 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     backgroundColor: '#333',
+    flexDirection: 'row',
   },
   evenRow: {
     backgroundColor: '#f9f9f9',
@@ -257,7 +244,7 @@ const styles = StyleSheet.create({
   cell: {
     flex: 1,
     paddingVertical: 15,
-    paddingHorizontal: 10,
+    paddingLeft: 10,
     fontSize: 16,
     textAlign: 'center',
     color: '#555',
@@ -265,35 +252,22 @@ const styles = StyleSheet.create({
   headerCell: {
     color: '#fff',
     fontWeight: 'bold',
-  },
-  deleteButton: {
-    backgroundColor: '#007bff',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    marginLeft: 5,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    textAlign: 'center',
   },
   lecturerIdColumn: {
     flexBasis: '10%',
   },
   fullNameColumn: {
-    flexBasis: '15%',
+    flexBasis: '20%',
   },
   addressColumn: {
-    flexBasis: '15%',
+    flexBasis: '20%',
   },
   contactColumn: {
-    flexBasis: '10%',
+    flexBasis: '15%',
   },
   emailColumn: {
-    flexBasis: '15%',
+    flexBasis: '20%',
   },
   departmentColumn: {
     flexBasis: '15%',

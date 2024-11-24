@@ -42,7 +42,6 @@ const addLecturerAndUser = async (id, username, password, fname, lname, address,
 
 const deleteLecturer = async (id) => {
   const lecturer = await Lecturer.findByPk(id);
-
   if (!lecturer) {
     throw new Error('Lecturer not found');
   }
@@ -51,7 +50,7 @@ const deleteLecturer = async (id) => {
   await lecturer.destroy();
 
   // Optionally, delete the associated user record if the lecturer is deleted
-  await models.User.destroy({ where: { userId: lecturer.Lid } });
+  await User.destroy({ where: { userId: lecturer.Lid } });
 };
 
 module.exports = {
