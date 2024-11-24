@@ -3,6 +3,7 @@ const Module = require('../models/moduleModel');
 const Enrollment = require('../models/enrollmentModel');
 const Contains = require('../models/containsModel');
 const Teach = require('../models/teachModel');
+const Course = require('../models/courseModel');
 
 const getAllModules = async () => {
   return await Module.findAll();
@@ -29,7 +30,7 @@ const deleteModule = async (id) => {
 const getModulesForStudent = async (studentId) => {
   const enrolledCourses = await Enrollment.findAll({
     where: { Sid: studentId },
-    include: [{ model: models.Course, attributes: ['courseId'] }]
+    include: [{ model: Course, attributes: ['courseId'] }]
   });
 
   if (enrolledCourses.length === 0) {
@@ -40,14 +41,14 @@ const getModulesForStudent = async (studentId) => {
 
   return await Contains.findAll({
     where: { courseId: courseIds },
-    include: [{ model: models.Module, attributes: ['moduleId', 'moduleName', 'description', 'credit'] }]
+    include: [{ model: Module, attributes: ['moduleId', 'moduleName', 'description', 'credit'] }]
   });
 };
 
 const getModulesForLecturer = async (lecturerId) => {
   return await Teach.findAll({
     where: { Lid: lecturerId },
-    include: [{ model: models.Module, attributes: ['moduleId', 'moduleName', 'description', 'credit'] }]
+    include: [{ model: Module, attributes: ['moduleId', 'moduleName', 'description', 'credit'] }]
   });
 };
 

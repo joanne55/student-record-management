@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity} from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
 
 const LoginScreen = ({ onLogin }) => {
   const [userId, setUserId] = useState('');
@@ -61,35 +61,34 @@ const LoginScreen = ({ onLogin }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-      <View style={styles.form}>
-        {/* User ID Input */}
-        <TextInput
-          style={styles.input}
-          placeholder="User ID"
-          value={userId}
-          onChangeText={(text) => setUserId(text)}
-          required
-        />
-
-        {/* Password Input */}
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={(text) => setPassword(text)}
-          secureTextEntry={true}
-          required
-        />
-
-        {/* Login Button */}
+      <form onSubmit={handleLogin} style={styles.form}>
+        <div>
+          <TextInput
+            style={styles.input}
+            type="text"
+            placeholder="User ID"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <TextInput
+            style={styles.input}
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            secureTextEntry={true}
+          />
+        </div>
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
-      </View>
-
-      {/* Display error or success messages */}
-      {error && <Text style={styles.errorText}>{error}</Text>}
-      {success && <Text style={styles.successText}>{success}</Text>}
+      </form>
+      {error && <Text style={{ color: 'red' }}>{error}</Text>}
+      {success && <Text style={{ color: 'green' }}>{success}</Text>}
     </View>
   );
 };
@@ -132,14 +131,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  errorText: {
-    color: 'red',
-    marginTop: 20,
-  },
-  successText: {
-    color: 'green',
-    marginTop: 20,
-  },
+  form: {
+    width: '100%',
+    marginBottom: 20,
+  }
 });
 
 export default LoginScreen;
+
