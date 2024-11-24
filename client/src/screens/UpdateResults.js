@@ -15,32 +15,6 @@ const UpdateResults = () => {
     setFormData({ ...formData, [key]: value });
   };
 
-  // Fetch all grades from the backend
-  const fetchGrades = async () => {
-    const token = sessionStorage.getItem('authToken');
-    if (!token) {
-      Alert.alert('Error', 'User not authenticated');
-      return;
-    }
-
-    try {
-      const response = await axios.get('http://localhost:3001/api/course', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setGrades(response.data.data || []); // Set the courses list from the API response
-    } catch (error) {
-      console.error('Error fetching grades:', error);
-      Alert.alert('Error', 'Failed to load grades');
-    }
-  };
-
-  // Fetch courses when the component mounts
-  useEffect(() => {
-    fetchGrades();
-  }, []);
-
   // Handle form submission for adding or updating a course
   const handleSubmit = async () => {
     const token = sessionStorage.getItem('authToken');
@@ -57,7 +31,7 @@ const UpdateResults = () => {
         grade: formData.grade, // mapping grade
       };
 
-      const response = await axios.post('http://localhost:3001/api/course', postData, {
+      const response = await axios.post('http://localhost:3001/api/result/lecturer', postData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -68,41 +42,39 @@ const UpdateResults = () => {
         // Reset form data
         setFormData({
             studentID: '',
-          moduleID: '',
-          grade: '',
+            moduleID: '',
+            grade: '',
         });
-        // Re-fetch courses
-        fetchGrades();
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to add/update course');
+      Alert.alert('Error', 'Failed to add/update grade');
     }
   };
 
-  const handleUpdate = async (id) => {
-    const token = sessionStorage.getItem('authToken');
-    console.log('Update grade with ID:', id);
-    if (!token) {
-      Alert.alert('Error', 'User not authenticated');
-      return;
-    }
+//   const handleUpdate = async (id) => {
+//     const token = sessionStorage.getItem('authToken');
+//     console.log('Update grade with ID:', id);
+//     if (!token) {
+//       Alert.alert('Error', 'User not authenticated');
+//       return;
+//     }
 
-    try {
-      const response = await axios.delete(`http://localhost:3001/api/course/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+//     try {
+//       const response = await axios.delete(`http://localhost:3001/api/course/${id}`, {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       });
 
-      if (response.status === 200) {
-        setGrades((prevCourses) => prevCourses.filter((course) => course.courseId !== id)); //need to change
-        Alert.alert('Success', 'Course deleted successfully');
-      }
-    } catch (error) {
-      console.error('Error deleting grade:', error.response?.data || error.message);
-      Alert.alert('Error', error.response?.data?.error || 'Failed to delete grade');
-    }
-  };
+//       if (response.status === 200) {
+//         setGrades((prevCourses) => prevCourses.filter((course) => course.courseId !== id)); //need to change
+//         Alert.alert('Success', 'Course deleted successfully');
+//       }
+//     } catch (error) {
+//       console.error('Error deleting grade:', error.response?.data || error.message);
+//       Alert.alert('Error', error.response?.data?.error || 'Failed to delete grade');
+//     }
+//   };
 
   return (
     <View style={styles.container}>
@@ -127,34 +99,6 @@ const UpdateResults = () => {
           onChangeText={(value) => handleInputChange('grade', value)}
         />
         <Button title="Add/Update Grade" onPress={handleSubmit} />
-      </View>
-
-      <Text style={styles.title}>Grades List</Text>
-      <View style={styles.listTable}>
-        <View style={[styles.row, styles.headerRow]}>
-          <Text style={[styles.cell, styles.headerCell, styles.courseIdColumn]}>Student ID</Text>
-          <Text style={[styles.cell, styles.headerCell, styles.courseNameColumn]}>Module ID</Text>
-          <Text style={[styles.cell, styles.headerCell, styles.descriptionColumn]}>Grade</Text>
-          <Text style={[styles.cell, styles.headerCell]}></Text>
-          <Text style={[styles.cell, styles.headerCell]}></Text>
-        </View>
-
-        {grades.map((grade, index) => (
-          <View
-            key={grade}
-            style={[styles.row, index % 2 === 0 ? styles.evenRow : styles.oddRow]}
-          >
-            <Text style={[styles.cell, styles.courseIdColumn]}>{grade.studentID}</Text>
-            <Text style={[styles.cell, styles.courseNameColumn]}>{grade.moduleID}</Text>
-            <Text style={[styles.cell, styles.descriptionColumn]}>{grade.grade}</Text>
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => handleUpdate(grade)}
-            >
-              <Text style={styles.deleteButtonText}>UPDATE</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
       </View>
     </View>
   );

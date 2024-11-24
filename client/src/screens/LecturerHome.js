@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ViewModules from './ViewLecturerModules';
-import ViewResults from './UpdateResults';
+import UpdateResults from './UpdateResults';
 
 const LecturerHome = ({ userID, onLogout }) => {
   const [activeScreen, setActiveScreen] = useState('Home'); // Tracks the current screen
@@ -16,7 +16,7 @@ const LecturerHome = ({ userID, onLogout }) => {
           case 'View Modules':
               return <ViewModules />;
           case 'Update Results':
-              return <ViewResults />;
+              return <UpdateResults />;
           default:
               return <HomeScreen />;
       }
@@ -43,7 +43,7 @@ const LecturerHome = ({ userID, onLogout }) => {
                 style={styles.navButton}
                 onClick={() => setActiveScreen('Update Results')}
             >
-                View Results
+                Update Results
             </button>
             <button
                 style={{ ...styles.navButton, backgroundColor: '#ff5e57', color: '#fff' }}
