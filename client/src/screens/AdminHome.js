@@ -65,7 +65,10 @@ const AdminHome = ({ userID, onLogout }) => {
             </button>
             <button
                 style={{ ...styles.navButton, backgroundColor: '#ff5e57', color: '#fff' }}
-                onClick={onLogout}
+                onClick={() => {
+                    sessionStorage.clear();
+                    onLogout();
+                }}
             >
                 Logout
             </button>
