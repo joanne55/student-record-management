@@ -21,10 +21,10 @@ export const StudentRecordProvider = ({ children }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: studentsData } = await axios.get('/api/students');
-      const { data: coursesData } = await axios.get('/api/courses');
-      const { data: lecturersData } = await axios.get('/api/lecturers');
-      const { data: gradesData } = await axios.get('/api/grades');
+      const { data: studentsData } = await axios.get('/api/student');
+      const { data: coursesData } = await axios.get('/api/course');
+      const { data: lecturersData } = await axios.get('/api/lecturer');
+      const { data: gradesData } = await axios.get('/api/grade');
       setStudents(studentsData);
       setCourses(coursesData);
       setLecturers(lecturersData);

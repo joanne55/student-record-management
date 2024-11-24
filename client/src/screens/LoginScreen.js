@@ -106,6 +106,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 40,
   },
+  form: {
+    width: '100%',
+    marginBottom: 20,
+  },
   input: {
     width: '100%',
     padding: 15,
