@@ -20,14 +20,14 @@ const getCourses = async (req, res) => {
 // Admin can POST (add) a new course
 const addCourse = async (req, res) => {
   try {
-    const { courseid, name, description } = req.body;
+    const { courseId, name, description } = req.body;
     if (!name || !description) {
       return res.status(400).json({
         message: 'Course name and description are required.'
       });
     }
 
-    const newCourse = await courseService.addCourse(courseid, name, description);
+    const newCourse = await courseService.addCourse(courseId, name, description);
     res.status(201).json({
       message: 'Course added successfully',
       data: newCourse

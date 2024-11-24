@@ -17,8 +17,8 @@ const getModules = async (req, res) => {
 // Admin can POST (create) a new module
 const createModule = async (req, res) => {
   try {
-    const { id, name, description, credits } = req.body;
-    const newModule = await moduleService.createModule(id, name, description, credits);
+    const { moduleId, name, description, credit } = req.body;
+    const newModule = await moduleService.createModule(moduleId, name, description, credit);
     res.status(201).json({
       message: 'Module created successfully',
       data: newModule
