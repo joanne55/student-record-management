@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
 
-const LoginScreen = ({ onLogin }) => {
+
+const LoginScreen = () => {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -32,21 +35,13 @@ const LoginScreen = ({ onLogin }) => {
         sessionStorage.setItem('authToken', token);
         console.log('role:', role);
 
-        onLogin(role, userId);
+        login(role, userId, token);
 
         setSuccess('Login successful! Redirecting...');
         setError('');
 
         // Redirect dynamically based on user role
-        setTimeout(() => {
-          if (role === 'admin') {
-            navigate('/AdminHome');
-          } else if (role === 'student') {
-            navigate('/StudentHome');
-          } else {
-            setError('Invalid user role');
-          }
-        }, 2000);
+        navigate(`/${role}Home`);
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Login failed.');
