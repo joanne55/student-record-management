@@ -171,7 +171,6 @@ const ManageModules = () => {
           <Text style={[styles.cell, styles.headerCell]}>module Name</Text>
           <Text style={[styles.cell, styles.headerCell]}>Description</Text>
           <Text style={[styles.cell, styles.headerCell]}>Credits</Text>
-          <Text style={[styles.cell, styles.headerCell]}>Actions</Text>
         </View>
 
         {Modules.map((module, index) => (
