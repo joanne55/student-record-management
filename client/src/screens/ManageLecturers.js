@@ -37,13 +37,10 @@ const ManageLecturers = () => {
     } catch (error) {
       console.error('Error fetching lecturers:', error);
       if (error.response) {
-        // Request made and server responded with a status code outside the range 2xx
         Alert.alert('Error', `Failed to load lecturers. Status code: ${error.response.status}`);
       } else if (error.request) {
-        // Request made but no response was received
         Alert.alert('Error', 'No response from server');
       } else {
-        // Something else went wrong
         Alert.alert('Error', `Error: ${error.message}`);
       }
     }
@@ -61,16 +58,16 @@ const ManageLecturers = () => {
       Alert.alert('Error', 'Session expired. Please log in again.');
       return;
     }
-  
+
     // Validation to ensure all fields are filled
     if (!formData.lecturerID || !formData.fname || !formData.lname || !formData.email) {
       Alert.alert('Error', 'All fields are required.');
       return;
     }
-  
+
     try {
       console.log('Sending data to backend:', formData); // Log the form data
-  
+
       const postData = {
         id: formData.lecturerID,
         username: `${formData.fname.toLowerCase()}${formData.lecturerID}`,
@@ -82,15 +79,15 @@ const ManageLecturers = () => {
         email: formData.email,
         department: formData.department,
       };
-  
+
       const response = await axios.post('http://localhost:3001/api/lecturer', postData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+
       console.log('Response from backend:', response);
-  
+
       if (response.status === 201) {
         Alert.alert('Success', 'Lecturer added successfully!');
         setFormData({
@@ -111,7 +108,47 @@ const ManageLecturers = () => {
       Alert.alert('Error', 'Failed to add/update lecturer. Check logs for details.');
     }
   };
-  
+
+  // Handle deleting a lecturer
+  const handleDelete = async () => {
+    const token = sessionStorage.getItem('authToken');
+    if (!token) {
+      Alert.alert('Error', 'Session expired. Please log in again.');
+      return;
+    }
+
+    if (!formData.lecturerID) {
+      Alert.alert('Error', 'Lecturer ID is required for deletion.');
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`http://localhost:3001/api/lecturer/${formData.lecturerID}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 200) {
+        Alert.alert('Success', 'Lecturer deleted successfully!');
+        setFormData({
+          lecturerID: '',
+          fname: '',
+          lname: '',
+          address: '',
+          contact: '',
+          email: '',
+          department: '',
+        });
+        fetchLecturers();
+      } else {
+        Alert.alert('Error', 'Failed to delete lecturer.');
+      }
+    } catch (error) {
+      console.error('Detailed Error:', error.response ? error.response.data : error.message);
+      Alert.alert('Error', 'Failed to delete lecturer. Check logs for details.');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -159,7 +196,12 @@ const ManageLecturers = () => {
           value={formData.department}
           onChangeText={(value) => handleInputChange('department', value)}
         />
-        <Button title="Add/Update Lecturer" onPress={handleSubmit} />
+        <View style={styles.buttonContainer}>
+          <Button title="Add/Update Lecturer" onPress={handleSubmit} />
+        </View>
+        <View style={styles.buttonContainer}>
+          <Button title="Delete Lecturer" onPress={handleDelete} color="red" />
+        </View>
       </View>
 
       <Text style={styles.title}>Lecturers List</Text>
@@ -179,9 +221,7 @@ const ManageLecturers = () => {
             style={[styles.row, index % 2 === 0 ? styles.evenRow : styles.oddRow]}
           >
             <Text style={[styles.cell, styles.lecturerIdColumn]}>{lecturer.Lid}</Text>
-            <Text style={[styles.cell, styles.fullNameColumn]}>
-              {lecturer.Lfname} {lecturer.Llname}
-            </Text>
+            <Text style={[styles.cell, styles.fullNameColumn]}>{lecturer.Lfname} {lecturer.Llname}</Text>
             <Text style={[styles.cell, styles.addressColumn]}>{lecturer.Laddress}</Text>
             <Text style={[styles.cell, styles.contactColumn]}>{lecturer.Lcontact}</Text>
             <Text style={[styles.cell, styles.emailColumn]}>{lecturer.Lemail}</Text>
@@ -271,6 +311,10 @@ const styles = StyleSheet.create({
   },
   departmentColumn: {
     flexBasis: '15%',
+  },
+  buttonContainer: {
+    marginBottom: 15,
+    paddingHorizontal: 10,
   },
 });
 

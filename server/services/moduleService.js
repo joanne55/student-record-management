@@ -9,9 +9,9 @@ const getAllModules = async () => {
   return await Module.findAll();
 };
 
-const createModule = async (id, name, description, credits) => {
+const createModule = async (moduleId, name, description, credits) => {
   const newModule = await Module.create({
-    moduleId: id,
+    moduleId,
     moduleName: name,
     description: description,
     credit: credits

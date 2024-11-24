@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 
 const ManageCourses = () => {
   const [courses, setCourses] = useState([]);
   const [formData, setFormData] = useState({
-    courseId: '',
-    courseName: '',
+    courseID: '',
+    name: '',
     description: '',
   });
 
@@ -32,7 +32,13 @@ const ManageCourses = () => {
       setCourses(response.data.data || []); // Set the courses list from the API response
     } catch (error) {
       console.error('Error fetching courses:', error);
-      Alert.alert('Error', 'Failed to load courses');
+      if (error.response) {
+        Alert.alert('Error', `Failed to load courses. Status code: ${error.response.status}`);
+      } else if (error.request) {
+        Alert.alert('Error', 'No response from server');
+      } else {
+        Alert.alert('Error', `Error: ${error.message}`);
+      }
     }
   };
 
@@ -45,16 +51,23 @@ const ManageCourses = () => {
   const handleSubmit = async () => {
     const token = sessionStorage.getItem('authToken');
     if (!token) {
-      Alert.alert('Error', 'User not authenticated');
+      Alert.alert('Error', 'Session expired. Please log in again.');
+      return;
+    }
+
+    // Validation to ensure all fields are filled
+    if (!formData.courseID || !formData.name || !formData.description) {
+      Alert.alert('Error', 'All fields are required.');
       return;
     }
 
     try {
-      // Prepare the data in the format expected by the backend
+      console.log('Sending data to backend:', formData); // Log the form data
+
       const postData = {
-        courseId: formData.courseId,  // mapping course ID
-        courseName: formData.courseName,  // mapping course name
-        description: formData.description, // mapping course description
+        id: formData.courseID,
+        name: formData.name,
+        description: formData.description,
       };
 
       const response = await axios.post('http://localhost:3001/api/course', postData, {
@@ -63,48 +76,59 @@ const ManageCourses = () => {
         },
       });
 
-      if (response.status === 200) {
+      console.log('Response from backend:', response);
+
+      if (response.status === 201) {
         Alert.alert('Success', 'Course added successfully!');
-        // Reset form data
         setFormData({
-          courseId: '',
-          courseName: '',
+          courseID: '',
+          name: '',
           description: '',
         });
-        // Re-fetch courses
         fetchCourses();
+      } else {
+        Alert.alert('Error', 'Failed to add/update course.');
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to add/update course');
+      console.error('Detailed Error:', error.response ? error.response.data : error.message);
+      Alert.alert('Error', 'Failed to add/update course. Check logs for details.');
     }
   };
 
-  // Handle course deletion
-  const handleDelete = async (id) => {
+  // Handle deleting a course
+  const handleDelete = async () => {
     const token = sessionStorage.getItem('authToken');
-    console.log('Deleting course with ID:', id);
     if (!token) {
-      Alert.alert('Error', 'User not authenticated');
+      Alert.alert('Error', 'Session expired. Please log in again.');
       return;
     }
 
-    const confirmDelete = window.confirm('Are you sure you want to delete this course?');
-    if (!confirmDelete) return;
+    if (!formData.courseID) {
+      Alert.alert('Error', 'Course ID is required for deletion.');
+      return;
+    }
 
     try {
-      const response = await axios.delete(`http://localhost:3001/api/course/${id}`, {
+      const response = await axios.delete(`http://localhost:3001/api/course/${formData.courseID}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (response.status === 200) {
-        setCourses((prevCourses) => prevCourses.filter((course) => course.courseId !== id));
-        Alert.alert('Success', 'Course deleted successfully');
+        Alert.alert('Success', 'Course deleted successfully!');
+        setFormData({
+          courseId: '',
+          name: '',
+          description: '',
+        });
+        fetchCourses();
+      } else {
+        Alert.alert('Error', 'Failed to delete course.');
       }
     } catch (error) {
-      console.error('Error deleting course:', error.response?.data || error.message);
-      Alert.alert('Error', error.response?.data?.error || 'Failed to delete course');
+      console.error('Detailed Error:', error.response ? error.response.data : error.message);
+      Alert.alert('Error', 'Failed to delete course. Check logs for details.');
     }
   };
 
@@ -115,14 +139,14 @@ const ManageCourses = () => {
         <TextInput
           style={styles.input}
           placeholder="Course ID"
-          value={formData.courseId}
-          onChangeText={(value) => handleInputChange('courseId', value)}
+          value={formData.courseID}
+          onChangeText={(value) => handleInputChange('courseID', value)}
         />
         <TextInput
           style={styles.input}
           placeholder="Course Name"
-          value={formData.courseName}
-          onChangeText={(value) => handleInputChange('courseName', value)}
+          value={formData.name}
+          onChangeText={(value) => handleInputChange('name', value)}
         />
         <TextInput
           style={styles.input}
@@ -130,33 +154,30 @@ const ManageCourses = () => {
           value={formData.description}
           onChangeText={(value) => handleInputChange('description', value)}
         />
-        <Button title="Add/Update Course" onPress={handleSubmit} />
+        <View style={styles.buttonContainer}>
+          <Button title="Add/Update Course" onPress={handleSubmit} />
+        </View>
+        <View style={styles.buttonContainer}>
+          <Button title="Delete Course" onPress={handleDelete} color="red" />
+        </View>
       </View>
 
       <Text style={styles.title}>Courses List</Text>
       <View style={styles.listTable}>
         <View style={[styles.row, styles.headerRow]}>
-          <Text style={[styles.cell, styles.headerCell, styles.courseIdColumn]}>Course ID</Text>
-          <Text style={[styles.cell, styles.headerCell, styles.courseNameColumn]}>Course Name</Text>
+          <Text style={[styles.cell, styles.headerCell, styles.courseIdColumn]}>CourseID</Text>
+          <Text style={[styles.cell, styles.headerCell, styles.nameColumn]}>Name</Text>
           <Text style={[styles.cell, styles.headerCell, styles.descriptionColumn]}>Description</Text>
-          <Text style={[styles.cell, styles.headerCell]}></Text>
-          <Text style={[styles.cell, styles.headerCell]}></Text>
         </View>
 
         {courses.map((course, index) => (
           <View
-            key={course.courseId}
+            key={course.id}
             style={[styles.row, index % 2 === 0 ? styles.evenRow : styles.oddRow]}
           >
             <Text style={[styles.cell, styles.courseIdColumn]}>{course.courseId}</Text>
-            <Text style={[styles.cell, styles.courseNameColumn]}>{course.courseName}</Text>
+            <Text style={[styles.cell, styles.nameColumn]}>{course.courseName}</Text>
             <Text style={[styles.cell, styles.descriptionColumn]}>{course.description}</Text>
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => handleDelete(course.courseId)}
-            >
-              <Text style={styles.deleteButtonText}>DELETE</Text>
-            </TouchableOpacity>
           </View>
         ))}
       </View>
@@ -168,7 +189,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    padding: 10,
+    paddingTop: 10,
     backgroundColor: '#fff',
   },
   title: {
@@ -176,6 +197,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
     color: '#333',
+    textAlign: 'left',
   },
   input: {
     width: '100%',
@@ -188,7 +210,6 @@ const styles = StyleSheet.create({
   },
   editTable: {
     marginBottom: 20,
-    
   },
   listTable: {
     width: '100%',
@@ -204,6 +225,7 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     backgroundColor: '#333',
+    flexDirection: 'row',
   },
   evenRow: {
     backgroundColor: '#f9f9f9',
@@ -214,7 +236,7 @@ const styles = StyleSheet.create({
   cell: {
     flex: 1,
     paddingVertical: 15,
-    paddingHorizontal: 10,
+    paddingLeft: 10,
     fontSize: 16,
     textAlign: 'center',
     color: '#555',
@@ -222,29 +244,20 @@ const styles = StyleSheet.create({
   headerCell: {
     color: '#fff',
     fontWeight: 'bold',
-  },
-  deleteButton: {
-    backgroundColor: '#007bff',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    marginLeft: 5,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    textAlign: 'center',
   },
   courseIdColumn: {
-    flexBasis: '20%',
+    flexBasis: '10%',
   },
-  courseNameColumn: {
+  nameColumn: {
     flexBasis: '30%',
   },
   descriptionColumn: {
-    flexBasis: '40%',
+    flexBasis: '50%',
+  },
+  buttonContainer: {
+    marginBottom: 15,
+    paddingHorizontal: 10,
   },
 });
 

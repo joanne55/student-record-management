@@ -211,8 +211,12 @@ const ManageStudents = () => {
           value={formData.email}
           onChangeText={(value) => handleInputChange('email', value)}
         />
-        <Button title="Add/Update Student" onPress={handleSubmit} />
-        <Button title="Delete Student" onPress={handleDelete} color="red" />
+        <View style={styles.buttonContainer}>
+          <Button title="Add/Update Student" onPress={handleSubmit} />
+        </View>
+        <View style={styles.buttonContainer}>
+          <Button title="Delete Student" onPress={handleDelete} color="red" />
+        </View>
       </View>
 
       <Text style={styles.title}>Students List</Text>
@@ -268,8 +272,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
-  editTable: {
-    marginBottom: 20,
+  buttonContainer: {
+    marginBottom: 15,
+    paddingHorizontal: 10,
   },
   listTable: {
     width: '100%',
